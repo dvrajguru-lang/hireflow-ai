@@ -58,15 +58,12 @@ Rules:
       question,
     });
 
-  } catch (error) {
+  } catch (error: any) {
 
-    console.error(error);
-
+    console.error("INTERVIEW API ERROR:", error);
+  
     return Response.json({
-      question:
-        "Interview generation failed.",
+      question: `ERROR: ${error?.message || "Unknown error"}`
     });
-
+  
   }
-
-}
