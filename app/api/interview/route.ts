@@ -1,15 +1,16 @@
 import OpenAI from "openai";
 
+const client = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
+});
+
 export async function POST(req: Request) {
   try {
-    console.log("OPENROUTER KEY EXISTS:", !!process.env.OPENROUTER_API_KEY);
-
     const body = await req.json();
 
-    const client = new OpenAI({
-      apiKey: process.env.OPENROUTER_API_KEY,
-      baseURL: "https://openrouter.ai/api/v1",
-    });
+    const messages = body.messages || [];
+    const mode = body.mode || "Technical";
 
     const completion = await client.chat.completions.create({
       model: "openai/gpt-4o-mini",
@@ -17,23 +18,52 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "system",
-          content:
-            "You are a professional interviewer. Ask one interview question.",
+          content: `
+You are a highly realistic professional interviewer.
+
+Interview Mode:
+${mode}
+
+Rules:
+- Ask ONLY one question at a time.
+- Be conversational and realistic.
+- Ask follow-up questions based on previous answers.
+- If answer is weak, challenge the candidate.
+- If answer is strong, go deeper.
+- Keep interviews professional.
+- Do not give feedback.
+- Do not explain.
+- Behave like a real interviewer from a top company.
+
+If mode is Technical:
+- Ask technical questions.
+- Test practical knowledge.
+- Ask scenario-based questions.
+
+If mode is HR:
+- Ask behavioral and personality questions.
+
+If mode is Managerial:
+- Ask leadership, ownership, and decision-making questions.
+          `,
         },
+
+        ...messages,
       ],
     });
 
-    return Response.json({
-      question:
-        completion.choices?.[0]?.message?.content ||
-        "Tell me about yourself.",
-    });
-  } catch (error: any) {
-    console.error("FULL ERROR:", error);
+    const question =
+      completion.choices?.[0]?.message?.content ||
+      "Tell me about yourself.";
 
     return Response.json({
-      error: error?.message,
-      details: error,
+      question,
+    });
+  } catch (error: any) {
+    console.error("INTERVIEW API ERROR:", error);
+
+    return Response.json({
+      question: "Interview generation failed.",
     });
   }
 }
