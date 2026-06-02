@@ -12,7 +12,13 @@ export async function POST(req: Request) {
     const messages = body.messages || [];
     const mode = body.mode || "Technical";
 
-    const completion = await client.chat.completions.create({
+    console.log("KEY EXISTS:", !!process.env.OPENROUTER_API_KEY);
+
+console.log(
+  "KEY PREFIX:",
+  process.env.OPENROUTER_API_KEY?.substring(0, 12)
+);
+const completion = await client.chat.completions.create({
       model: "openai/gpt-4o-mini",
 
       messages: [
