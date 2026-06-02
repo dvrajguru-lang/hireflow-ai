@@ -6,30 +6,22 @@ const client = new OpenAI({
 });
 
 export async function POST(req: Request) {
-
   try {
-
     const body = await req.json();
 
     const messages = body.messages || [];
-
     const mode = body.mode || "Technical";
 
-    const completion =
-      await client.chat.completions.create({
+    const completion = await client.chat.completions.create({
+      model: "openai/gpt-4o-mini",
 
-        model: "baidu/cobuddy:free",
-
-        messages: [
-
-          {
-            role: "system",
-
-            content: `
+      messages: [
+        {
+          role: "system",
+          content: `
 You are a highly realistic professional interviewer.
 
-Interview Mode:
-${mode}
+Interview Mode: ${mode}
 
 Rules:
 - Ask ONLY one question at a time.
@@ -41,14 +33,12 @@ Rules:
 - Do not give feedback.
 - Do not explain.
 - Behave like a real interviewer from a top company.
-            `,
-          },
+          `,
+        },
 
-          ...messages,
-
-        ],
-
-      });
+        ...messages,
+      ],
+    });
 
     const question =
       completion.choices?.[0]?.message?.content ||
@@ -57,13 +47,15 @@ Rules:
     return Response.json({
       question,
     });
-
   } catch (error: any) {
-
     console.error("INTERVIEW API ERROR:", error);
-  
+
     return Response.json({
-      question: `ERROR: ${error?.message || "Unknown error"}`
+      question: `ERROR: ${
+        error?.message ||
+        JSON.stringify(error) ||
+        "Unknown error"
+      }`,
     });
-  
   }
+}
