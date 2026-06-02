@@ -1,26 +1,15 @@
 import OpenAI from "openai";
 
-console.log(
-  "OPENROUTER KEY PREFIX:",
-  process.env.OPENROUTER_API_KEY?.substring(0, 15)
-);
-
-const client = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
-
 export async function POST(req: Request) {
   try {
+    console.log("OPENROUTER KEY EXISTS:", !!process.env.OPENROUTER_API_KEY);
+
     const body = await req.json();
 
-    const messages = body.messages || [];
-    const mode = body.mode || "Technical";
-
-    console.log(
-      "OPENROUTER KEY EXISTS:",
-      !!process.env.OPENROUTER_API_KEY
-    );
+    const client = new OpenAI({
+      apiKey: process.env.OPENROUTER_API_KEY,
+      baseURL: "https://openrouter.ai/api/v1",
+    });
 
     const completion = await client.chat.completions.create({
       model: "openai/gpt-4o-mini",
@@ -28,45 +17,23 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "system",
-          content: `
-You are a highly realistic professional interviewer.
-
-Interview Mode:
-${mode}
-
-Rules:
-- Ask ONLY one question at a time.
-- Be conversational and realistic.
-- Ask follow-up questions based on previous answers.
-- If answer is weak, challenge the candidate.
-- If answer is strong, go deeper.
-- Keep interviews professional.
-- Do not give feedback.
-- Do not explain.
-- Behave like a real interviewer from a top company.
-          `,
+          content:
+            "You are a professional interviewer. Ask one interview question.",
         },
-
-        ...messages,
       ],
     });
 
-    const question =
-      completion.choices?.[0]?.message?.content ||
-      "Tell me about yourself.";
-
     return Response.json({
-      question,
+      question:
+        completion.choices?.[0]?.message?.content ||
+        "Tell me about yourself.",
     });
   } catch (error: any) {
-    console.error("INTERVIEW API ERROR:", error);
+    console.error("FULL ERROR:", error);
 
     return Response.json({
-      question: `ERROR: ${
-        error?.message ||
-        JSON.stringify(error) ||
-        "Unknown error"
-      }`,
+      error: error?.message,
+      details: error,
     });
   }
 }
