@@ -1,5 +1,10 @@
 import OpenAI from "openai";
 
+console.log(
+  "OPENROUTER KEY PREFIX:",
+  process.env.OPENROUTER_API_KEY?.substring(0, 15)
+);
+
 const client = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
   baseURL: "https://openrouter.ai/api/v1",
@@ -12,13 +17,12 @@ export async function POST(req: Request) {
     const messages = body.messages || [];
     const mode = body.mode || "Technical";
 
-    console.log("KEY EXISTS:", !!process.env.OPENROUTER_API_KEY);
+    console.log(
+      "OPENROUTER KEY EXISTS:",
+      !!process.env.OPENROUTER_API_KEY
+    );
 
-console.log(
-  "KEY PREFIX:",
-  process.env.OPENROUTER_API_KEY?.substring(0, 12)
-);
-const completion = await client.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: "openai/gpt-4o-mini",
 
       messages: [
@@ -27,7 +31,8 @@ const completion = await client.chat.completions.create({
           content: `
 You are a highly realistic professional interviewer.
 
-Interview Mode: ${mode}
+Interview Mode:
+${mode}
 
 Rules:
 - Ask ONLY one question at a time.
