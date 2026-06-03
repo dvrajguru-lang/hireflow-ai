@@ -29,6 +29,7 @@ export default function ProfilePage() {
   }
 
   async function handleSave() {
+    alert("NEW CODE RUNNING");
     if (!user) {
       alert("No Clerk user found");
       return;
