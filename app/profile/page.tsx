@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
   const { user } = useUser();
@@ -28,19 +29,34 @@ export default function ProfilePage() {
   }
 
   async function handleSave() {
-    console.log("USER:", user);
-    console.log("FORM:", form);
-
     if (!user) {
       alert("No Clerk user found");
       return;
     }
-
-    alert(
-      `User Found!\n\nEmail: ${
-        user.primaryEmailAddress?.emailAddress || "No Email"
-      }`
-    );
+  
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({
+        clerk_id: user.id,
+        user_email: user.primaryEmailAddress?.emailAddress,
+        full_name: form.full_name,
+        title: form.title,
+        bio: form.bio,
+        location: form.location,
+        experience: form.experience,
+        skills: form.skills,
+        portfolio_link: form.portfolio_link,
+        linkedin_link: form.linkedin_link,
+        youtube_link: form.youtube_link,
+      });
+  
+    if (error) {
+      console.error(error);
+      alert(`Failed to save profile: ${error.message}`);
+      return;
+    }
+  
+    alert("Profile Saved Successfully!");
   }
 
   return (
