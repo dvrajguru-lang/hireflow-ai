@@ -37,6 +37,14 @@ export default function Sidebar() {
           </Link>
 
           <Link
+            href="/profile"
+            className="flex items-center gap-3 p-4 rounded-2xl hover:bg-white/5 transition-all"
+          >
+            <FileText size={20} />
+            Profile
+          </Link>
+
+          <Link
             href="/interview"
             className="flex items-center gap-3 p-4 rounded-2xl hover:bg-white/5 transition-all"
           >
