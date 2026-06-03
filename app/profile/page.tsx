@@ -34,34 +34,39 @@ export default function ProfilePage() {
         alert("No Clerk user found");
         return;
       }
-  
-      console.log("Saving profile...");
-  
-      const result = await supabase
+
+      const { data, error } = await supabase
         .from("profiles")
-        .upsert({
-          clerk_id: user.id,
-          user_email: user.primaryEmailAddress?.emailAddress,
-          full_name: form.full_name,
-          title: form.title,
-          bio: form.bio,
-          location: form.location,
-          experience: form.experience,
-          skills: form.skills,
-          portfolio_link: form.portfolio_link,
-          linkedin_link: form.linkedin_link,
-          youtube_link: form.youtube_link,
-        })
+        .upsert(
+          {
+            clerk_id: user.id,
+            user_email:
+              user.primaryEmailAddress?.emailAddress || "",
+
+            full_name: form.full_name,
+            title: form.title,
+            bio: form.bio,
+            location: form.location,
+            experience: form.experience,
+            skills: form.skills,
+            portfolio_link: form.portfolio_link,
+            linkedin_link: form.linkedin_link,
+            youtube_link: form.youtube_link,
+          },
+          {
+            onConflict: "clerk_id",
+          }
+        )
         .select();
-  
-      console.log("RESULT:", result);
-  
-      if (result.error) {
-        alert("ERROR: " + result.error.message);
-        console.error(result.error);
+
+      console.log("DATA:", data);
+
+      if (error) {
+        console.error(error);
+        alert(`Failed to save profile: ${error.message}`);
         return;
       }
-  
+
       alert("Profile Saved Successfully!");
     } catch (err) {
       console.error(err);
