@@ -91,8 +91,12 @@ export default function ProfilePage() {
     setLoading(false);
 
     if (error) {
-      console.error(error);
-      alert("Failed to save profile");
+      console.error("SUPABASE ERROR:", error);
+    
+      alert(
+        `ERROR: ${error.message}`
+      );
+    
       return;
     }
 
