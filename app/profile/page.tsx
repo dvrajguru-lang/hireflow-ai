@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
   const { user } = useUser();
-
-  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -22,9 +19,7 @@ export default function ProfilePage() {
   });
 
   function handleChange(
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
     setForm({
       ...form,
@@ -32,80 +27,25 @@ export default function ProfilePage() {
     });
   }
 
-  useEffect(() => {
-    loadProfile();
-  }, [user]);
-
-  async function loadProfile() {
-    if (!user) return;
-
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("clerk_id", user.id)
-      .single();
-
-    if (data) {
-      setForm({
-        full_name: data.full_name || "",
-        title: data.title || "",
-        bio: data.bio || "",
-        location: data.location || "",
-        experience: data.experience || "",
-        skills: data.skills || "",
-        portfolio_link: data.portfolio_link || "",
-        linkedin_link: data.linkedin_link || "",
-        youtube_link: data.youtube_link || "",
-      });
-    }
-  }
-
   async function handleSave() {
-    if (!user) return;
+    console.log("USER:", user);
+    console.log("FORM:", form);
 
-    setLoading(true);
-
-    const { error } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          clerk_id: user.id,
-          user_email:
-            user.primaryEmailAddress?.emailAddress,
-
-          full_name: form.full_name,
-          title: form.title,
-          bio: form.bio,
-          location: form.location,
-          experience: form.experience,
-          skills: form.skills,
-          portfolio_link: form.portfolio_link,
-          linkedin_link: form.linkedin_link,
-          youtube_link: form.youtube_link,
-        },
-        {
-          onConflict: "clerk_id",
-        }
-      );
-
-    setLoading(false);
-
-    if (error) {
-      console.error("SUPABASE ERROR:", error);
-    
-      alert(
-        `ERROR: ${error.message}`
-      );
-    
+    if (!user) {
+      alert("No Clerk user found");
       return;
     }
 
-    alert("Profile saved successfully");
+    alert(
+      `User Found!\n\nEmail: ${
+        user.primaryEmailAddress?.emailAddress || "No Email"
+      }`
+    );
   }
 
   return (
     <div className="p-10 max-w-4xl mx-auto text-white">
-      <h1 className="text-4xl font-bold mb-8 text-white">
+      <h1 className="text-4xl font-bold mb-8">
         Creator Profile
       </h1>
 
@@ -115,7 +55,7 @@ export default function ProfilePage() {
           placeholder="Full Name"
           value={form.full_name}
           onChange={handleChange}
-          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-400"
+          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         />
 
         <input
@@ -123,7 +63,7 @@ export default function ProfilePage() {
           placeholder="Professional Title"
           value={form.title}
           onChange={handleChange}
-          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-400"
+          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         />
 
         <textarea
@@ -132,7 +72,7 @@ export default function ProfilePage() {
           rows={5}
           value={form.bio}
           onChange={handleChange}
-          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-400"
+          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         />
 
         <input
@@ -140,7 +80,7 @@ export default function ProfilePage() {
           placeholder="Location"
           value={form.location}
           onChange={handleChange}
-          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-400"
+          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         />
 
         <input
@@ -148,7 +88,7 @@ export default function ProfilePage() {
           placeholder="Years of Experience"
           value={form.experience}
           onChange={handleChange}
-          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-400"
+          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         />
 
         <input
@@ -156,7 +96,7 @@ export default function ProfilePage() {
           placeholder="Skills (comma separated)"
           value={form.skills}
           onChange={handleChange}
-          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-400"
+          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         />
 
         <input
@@ -164,7 +104,7 @@ export default function ProfilePage() {
           placeholder="Portfolio URL"
           value={form.portfolio_link}
           onChange={handleChange}
-          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-400"
+          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         />
 
         <input
@@ -172,7 +112,7 @@ export default function ProfilePage() {
           placeholder="LinkedIn URL"
           value={form.linkedin_link}
           onChange={handleChange}
-          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-400"
+          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         />
 
         <input
@@ -180,15 +120,14 @@ export default function ProfilePage() {
           placeholder="YouTube Channel URL"
           value={form.youtube_link}
           onChange={handleChange}
-          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-400"
+          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         />
 
         <button
           onClick={handleSave}
-          disabled={loading}
-          className="px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-zinc-200 transition"
+          className="px-6 py-3 rounded-xl bg-white text-black font-semibold"
         >
-          {loading ? "Saving..." : "Save Profile"}
+          Save Profile
         </button>
       </div>
     </div>
