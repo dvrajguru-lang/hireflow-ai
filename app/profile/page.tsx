@@ -7,6 +7,8 @@ import { supabase } from "@/lib/supabase";
 export default function ProfilePage() {
   const { user } = useUser();
 
+  const [uploading, setUploading] = useState(false);
+
   const [form, setForm] = useState({
     full_name: "",
     title: "",
@@ -17,6 +19,7 @@ export default function ProfilePage() {
     portfolio_link: "",
     linkedin_link: "",
     youtube_link: "",
+    profile_image: "",
   });
 
   function handleChange(
@@ -53,6 +56,7 @@ export default function ProfilePage() {
         portfolio_link: data.portfolio_link || "",
         linkedin_link: data.linkedin_link || "",
         youtube_link: data.youtube_link || "",
+        profile_image: data.profile_image || "",
       });
     }
   }
@@ -62,6 +66,46 @@ export default function ProfilePage() {
       loadProfile();
     }
   }, [user]);
+
+  async function uploadImage(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    try {
+      const file = e.target.files?.[0];
+
+      if (!file) return;
+
+      setUploading(true);
+
+      const fileName = `${user?.id}-${Date.now()}-${file.name}`;
+
+      const { error } = await supabase.storage
+        .from("creator-images")
+        .upload(fileName, file);
+
+      if (error) {
+        alert(error.message);
+        setUploading(false);
+        return;
+      }
+
+      const { data } = supabase.storage
+        .from("creator-images")
+        .getPublicUrl(fileName);
+
+      setForm((prev) => ({
+        ...prev,
+        profile_image: data.publicUrl,
+      }));
+
+      alert("Photo uploaded successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Image upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function handleSave() {
     try {
@@ -86,6 +130,7 @@ export default function ProfilePage() {
             portfolio_link: form.portfolio_link,
             linkedin_link: form.linkedin_link,
             youtube_link: form.youtube_link,
+            profile_image: form.profile_image,
           },
           {
             onConflict: "clerk_id",
@@ -93,8 +138,7 @@ export default function ProfilePage() {
         );
 
       if (error) {
-        console.error(error);
-        alert(`Failed to save profile: ${error.message}`);
+        alert(error.message);
         return;
       }
 
@@ -112,6 +156,31 @@ export default function ProfilePage() {
       </h1>
 
       <div className="space-y-5">
+
+        <div className="flex flex-col items-center gap-4">
+          {form.profile_image ? (
+            <img
+              src={form.profile_image}
+              alt="Profile"
+              className="w-32 h-32 rounded-full object-cover border border-zinc-700"
+            />
+          ) : (
+            <div className="w-32 h-32 rounded-full bg-zinc-800 flex items-center justify-center">
+              No Photo
+            </div>
+          )}
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={uploadImage}
+          />
+
+          {uploading && (
+            <p>Uploading image...</p>
+          )}
+        </div>
+
         <input
           name="full_name"
           placeholder="Full Name"
