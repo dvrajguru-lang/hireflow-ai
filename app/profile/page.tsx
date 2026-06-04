@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { supabase } from "@/lib/supabase";
 
@@ -28,6 +28,41 @@ export default function ProfilePage() {
     });
   }
 
+  async function loadProfile() {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("clerk_id", user.id)
+      .single();
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    if (data) {
+      setForm({
+        full_name: data.full_name || "",
+        title: data.title || "",
+        bio: data.bio || "",
+        location: data.location || "",
+        experience: data.experience || "",
+        skills: data.skills || "",
+        portfolio_link: data.portfolio_link || "",
+        linkedin_link: data.linkedin_link || "",
+        youtube_link: data.youtube_link || "",
+      });
+    }
+  }
+
+  useEffect(() => {
+    if (user) {
+      loadProfile();
+    }
+  }, [user]);
+
   async function handleSave() {
     try {
       if (!user) {
@@ -35,14 +70,13 @@ export default function ProfilePage() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("profiles")
         .upsert(
           {
             clerk_id: user.id,
             user_email:
               user.primaryEmailAddress?.emailAddress || "",
-
             full_name: form.full_name,
             title: form.title,
             bio: form.bio,
@@ -56,10 +90,7 @@ export default function ProfilePage() {
           {
             onConflict: "clerk_id",
           }
-        )
-        .select();
-
-      console.log("DATA:", data);
+        );
 
       if (error) {
         console.error(error);
