@@ -1,3 +1,4 @@
+```tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -36,7 +37,7 @@ export default function ProfilePage() {
     if (!user) return;
 
     const { data, error } = await supabase
-      .from("Profiles")
+      .from("profiles")
       .select("*")
       .eq("clerk_id", user.id)
       .single();
@@ -45,6 +46,8 @@ export default function ProfilePage() {
       console.log("LOAD PROFILE ERROR:", error);
       return;
     }
+
+    console.log("PROFILE DATA:", data);
 
     if (data) {
       setForm({
@@ -74,9 +77,6 @@ export default function ProfilePage() {
     try {
       const file = e.target.files?.[0];
 
-      console.log("FILE:", file);
-      console.log("USER:", user);
-
       if (!file) {
         alert("No file selected");
         return;
@@ -90,8 +90,6 @@ export default function ProfilePage() {
       setUploading(true);
 
       const fileName = `${user.id}-${Date.now()}-${file.name}`;
-
-      console.log("Uploading:", fileName);
 
       const result = await supabase.storage
         .from("creator-images")
@@ -130,7 +128,7 @@ export default function ProfilePage() {
     }
 
     const { error } = await supabase
-      .from("Profiles")
+      .from("profiles")
       .upsert(
         {
           clerk_id: user.id,
@@ -159,12 +157,14 @@ export default function ProfilePage() {
     }
 
     alert("Profile Saved Successfully!");
+
+    loadProfile();
   }
 
   return (
     <div className="p-10 max-w-4xl mx-auto text-white">
       <h1 className="text-4xl font-bold mb-8">
-        Creator Profile TEST
+        Creator Profile
       </h1>
 
       <div className="space-y-5">
@@ -188,21 +188,12 @@ export default function ProfilePage() {
             type="file"
             accept="image/*"
             onChange={uploadImage}
+            className="hidden"
           />
 
           <button
             type="button"
-            onClick={() => {
-              console.log("REF:", fileInputRef.current);
-
-              if (!fileInputRef.current) {
-                alert("File input ref is NULL");
-                return;
-              }
-
-              alert("File input found");
-              fileInputRef.current.click();
-            }}
+            onClick={() => fileInputRef.current?.click()}
             className="px-4 py-2 bg-blue-600 rounded-lg"
           >
             Upload Profile Photo
@@ -297,3 +288,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+```
