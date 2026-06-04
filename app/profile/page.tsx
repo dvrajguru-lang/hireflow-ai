@@ -36,13 +36,13 @@ export default function ProfilePage() {
     if (!user) return;
 
     const { data, error } = await supabase
-      .from("profiles")
+      .from("Profiles")
       .select("*")
       .eq("clerk_id", user.id)
       .single();
 
     if (error) {
-      console.log(error);
+      console.log("LOAD PROFILE ERROR:", error);
       return;
     }
 
@@ -74,18 +74,34 @@ export default function ProfilePage() {
     try {
       const file = e.target.files?.[0];
 
-      if (!file || !user) return;
+      console.log("FILE:", file);
+      console.log("USER:", user);
+
+      if (!file) {
+        alert("No file selected");
+        return;
+      }
+
+      if (!user) {
+        alert("No user found");
+        return;
+      }
 
       setUploading(true);
 
       const fileName = `${user.id}-${Date.now()}-${file.name}`;
 
-      const { error } = await supabase.storage
+      console.log("Uploading:", fileName);
+
+      const result = await supabase.storage
         .from("creator-images")
         .upload(fileName, file);
 
-      if (error) {
-        alert(error.message);
+      console.log("UPLOAD RESULT:", result);
+
+      if (result.error) {
+        alert(result.error.message);
+        console.error(result.error);
         return;
       }
 
@@ -99,8 +115,8 @@ export default function ProfilePage() {
       }));
 
       alert("Image uploaded successfully!");
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error("UPLOAD ERROR:", err);
       alert("Upload failed");
     } finally {
       setUploading(false);
@@ -114,7 +130,7 @@ export default function ProfilePage() {
     }
 
     const { error } = await supabase
-      .from("profiles")
+      .from("Profiles")
       .upsert(
         {
           clerk_id: user.id,
