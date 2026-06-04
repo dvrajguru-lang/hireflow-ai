@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
   const { user } = useUser();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [uploading, setUploading] = useState(false);
 
@@ -73,11 +74,11 @@ export default function ProfilePage() {
     try {
       const file = e.target.files?.[0];
 
-      if (!file) return;
+      if (!file || !user) return;
 
       setUploading(true);
 
-      const fileName = `${user?.id}-${Date.now()}-${file.name}`;
+      const fileName = `${user.id}-${Date.now()}-${file.name}`;
 
       const { error } = await supabase.storage
         .from("creator-images")
@@ -85,7 +86,6 @@ export default function ProfilePage() {
 
       if (error) {
         alert(error.message);
-        setUploading(false);
         return;
       }
 
@@ -98,66 +98,63 @@ export default function ProfilePage() {
         profile_image: data.publicUrl,
       }));
 
-      alert("Photo uploaded successfully!");
-    } catch (err) {
-      console.error(err);
-      alert("Image upload failed");
+      alert("Image uploaded successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Upload failed");
     } finally {
       setUploading(false);
     }
   }
 
   async function handleSave() {
-    try {
-      if (!user) {
-        alert("No Clerk user found");
-        return;
-      }
-
-      const { error } = await supabase
-        .from("profiles")
-        .upsert(
-          {
-            clerk_id: user.id,
-            user_email:
-              user.primaryEmailAddress?.emailAddress || "",
-            full_name: form.full_name,
-            title: form.title,
-            bio: form.bio,
-            location: form.location,
-            experience: form.experience,
-            skills: form.skills,
-            portfolio_link: form.portfolio_link,
-            linkedin_link: form.linkedin_link,
-            youtube_link: form.youtube_link,
-            profile_image: form.profile_image,
-          },
-          {
-            onConflict: "clerk_id",
-          }
-        );
-
-      if (error) {
-        alert(error.message);
-        return;
-      }
-
-      alert("Profile Saved Successfully!");
-    } catch (err) {
-      console.error(err);
-      alert("Unexpected Error");
+    if (!user) {
+      alert("No user found");
+      return;
     }
+
+    const { error } = await supabase
+      .from("profiles")
+      .upsert(
+        {
+          clerk_id: user.id,
+          user_email:
+            user.primaryEmailAddress?.emailAddress || "",
+          full_name: form.full_name,
+          title: form.title,
+          bio: form.bio,
+          location: form.location,
+          experience: form.experience,
+          skills: form.skills,
+          portfolio_link: form.portfolio_link,
+          linkedin_link: form.linkedin_link,
+          youtube_link: form.youtube_link,
+          profile_image: form.profile_image,
+        },
+        {
+          onConflict: "clerk_id",
+        }
+      );
+
+    if (error) {
+      alert(error.message);
+      console.error(error);
+      return;
+    }
+
+    alert("Profile Saved Successfully!");
   }
 
   return (
     <div className="p-10 max-w-4xl mx-auto text-white">
       <h1 className="text-4xl font-bold mb-8">
-        Creator Profile
+        Creator Profile TEST
       </h1>
 
       <div className="space-y-5">
 
         <div className="flex flex-col items-center gap-4">
+
           {form.profile_image ? (
             <img
               src={form.profile_image}
@@ -171,13 +168,32 @@ export default function ProfilePage() {
           )}
 
           <input
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={uploadImage}
           />
 
+          <button
+            type="button"
+            onClick={() => {
+              console.log("REF:", fileInputRef.current);
+
+              if (!fileInputRef.current) {
+                alert("File input ref is NULL");
+                return;
+              }
+
+              alert("File input found");
+              fileInputRef.current.click();
+            }}
+            className="px-4 py-2 bg-blue-600 rounded-lg"
+          >
+            Upload Profile Photo
+          </button>
+
           {uploading && (
-            <p>Uploading image...</p>
+            <p>Uploading...</p>
           )}
         </div>
 
@@ -199,8 +215,8 @@ export default function ProfilePage() {
 
         <textarea
           name="bio"
-          placeholder="Tell people about yourself..."
           rows={5}
+          placeholder="Tell people about yourself..."
           value={form.bio}
           onChange={handleChange}
           className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
@@ -260,6 +276,7 @@ export default function ProfilePage() {
         >
           Save Profile
         </button>
+
       </div>
     </div>
   );
